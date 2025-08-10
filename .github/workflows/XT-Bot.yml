@@ -2,8 +2,8 @@ name: XT-Bot
 
 on:
   workflow_dispatch:      # 允许手动触发
-#  schedule:
-#    - cron: '*/30 * * * *'  # 每30分钟运行
+  schedule:
+    - cron: '*/30 * * * *'  # 每30分钟运行
 
 jobs:
   auto-process:
