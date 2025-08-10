@@ -1,6 +1,11 @@
 {
   "consoleLogLevel": "INFO",
+  "interval": 5000,
+  "filterRetweets": true,
+  "filterQuotes": false,
+  "limit": 2000,
   "screenName": [
-    ""
+    "elonmusk",
+    "BarneLeigh97260"
   ]
 }
