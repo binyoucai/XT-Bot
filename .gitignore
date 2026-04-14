@@ -14,3 +14,14 @@ docker-compose.yml  # 如果不需要忽略
 
 .idea/
 *logs/
+
+# 运行期数据（本地保存，不入库）
+/Python/dataBase/
+/Python/output/
+/Python/downloads/
+/Python/logs/
+/TypeScript/data/
+/TypeScript/tweets/
+/TypeScript/resp/
+/TypeScript/logs/
+/Artifact/
