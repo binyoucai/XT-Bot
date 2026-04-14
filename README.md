@@ -7,7 +7,7 @@
 - 定时同步Twitter主页时间线推文(30分钟/次)
 - 同步指定用户全量历史推文及媒体(支持多用户)
 - Telegram Bot自动推送图文/视频(支持格式限制：图片<10M,视频<50M)
-- 实现数据分离,数据存储在 `XT-Data` 项目(推文数据/推送记录)
+- 数据默认本地落盘（`Python/` 与 `TypeScript/` 运行目录），不再依赖额外 GitHub 数据仓库存储推文/推送记录
 - GitHub Actions 自动化部署
 - Twitter广播/空间链接同步到Telegram(飞书可选)
 - 操作异常告警信息添加飞书机器人消息通知(可选)
@@ -15,15 +15,20 @@
 
 ## 快速配置 ⚙️
 
+
+> ✅ 说明：当前版本默认采用本地运行+本地数据存储方案，工作流中已移除对 `XT-DATA/data-repo` 的拉取和回推步骤。
+>
+> 为避免运行数据进入代码仓库，项目已默认忽略以下目录：`Python/dataBase`、`Python/output`、`TypeScript/data`、`TypeScript/tweets`、`TypeScript/resp` 等。
+
 1.Fork [XT-Bot](https://github.com/iniwym/XT-Bot) 项目
 
-2.创建私有[仓库](https://github.com/new) `XT-Data` 用于保存配置、推文和推送数据
+2.准备本地运行目录（无需新建 `XT-Data` 仓库，推荐使用 `LOCAL_DATA_ROOT` 放到仓库外）
 
-3.在 `XT-Data` 项目添加配置文件,或进行数据迁移
+3.在当前项目内准备配置文件，或执行本地数据迁移
 
-将 `config/config.json` 配置文件提交到 `XT-Data` 项目根目录
+将 `config/config.json` 保留在当前项目根目录
 
-`XT-Data` 项目目录结构如下：
+本地项目目录结构如下：
 
 ```
 └── config/
@@ -59,7 +64,7 @@
 <details>
 <summary>数据迁移(首次部署忽略)</summary>
 
-将历史数据中以下文件夹迁移到 `XT-Data` 项目根目录下：
+将历史数据迁移到当前项目根目录下：
 
 ```
 Python/dataBase
@@ -67,7 +72,7 @@ Python/output
 TypeScript/tweets
 ```
 
-迁移后的 `XT-Data` 项目目录结构如下：
+迁移后的 本地项目目录结构如下：
 
 ```
 ├── config/
@@ -91,9 +96,9 @@ TypeScript/tweets
 | `AUTH_TOKEN`     | 浏览器访问 [Twitter](https://x.com) 查看控制台Cookies中的 `auth_token`     |
 | `BOT_TOKEN`      | 通过 [@BotFather](https://t.me/BotFather) 创建Telegram Bot获取TOKEN,常用指令 `/start` `/newbot` `/mybots` |
 | `CHAT_ID`        | 通过 [@userinfobot](https://t.me/userinfobot) 获取用户ID,常用指令 `/start` |
-| `GH_TOKEN`       | 创建 [GitHub Token](https://github.com/settings/tokens/new) (No Expiration和scopes全选) |
+| `GH_TOKEN`       | (可选)仅用于清理 GitHub Actions 历史运行记录，不参与数据读写 |
 | `LARK_KEY`       | (可选)飞书群聊机器人Webhook地址最后段`xxxxxxxx`                              |
-| `REDIS_CONFIG`   | (可选)Redis连接配置(JSON格式),可动态修改 `XT-Data/config/config.json` 配置文件 |
+| `REDIS_CONFIG`   | (可选)Redis连接配置(JSON格式),可动态修改 `config/config.json` 配置文件 |
 | `SCREEN_NAME`    | 你的Twitter用户名(不含@),用于获取关注列表                                    |
 
 REDIS_CONFIG 格式如下：
@@ -122,7 +127,7 @@ REDIS_CONFIG 格式如下：
 
 ![XT-Bot](./images/auth-token.png)
 
-- 生成GitHub Token
+- 生成GitHub Token（仅工作流历史清理可选）
 
 ![XT-Bot](./images/gh-token.png)
 
@@ -152,7 +157,7 @@ REDIS_CONFIG 格式如下：
 - 🕒 每30分钟自动执行
 - 同步最近24小时的主页时间线推文
 - 过滤广告等非关注用户推文
-- 支持相关参数配置 `XT-Data/config/config.json`
+- 支持相关参数配置 `config/config.json`
 - 自动推送图片和视频到Telegram Bot
 
 为了实现自动执行,需要从下面的两种定时方式中选择一种
@@ -228,12 +233,12 @@ cloudflare-check配置
 
 - 同步指定用户全量推文
 - 支持多用户
-- 支持相关参数配置 `XT-Data/config/config.json`
+- 支持相关参数配置 `config/config.json`
 - 自动推送图片和视频到Telegram Bot
 
 设置用户列表方式有两种
 
-> 方式一: 手动修改 `XT-Data/config/config.json` 配置文件中的 `screenName` 列表
+> 方式一: 手动修改 `config/config.json` 配置文件中的 `screenName` 列表
 
 同步@aaa和@bbb时的配置如下,其他参数自行配置
 
@@ -253,7 +258,7 @@ cloudflare-check配置
 
 > 方式二: 通过Redis来指定用户列表(推荐)
 
-Redis的key键 `config` 内容对应 `XT-Data/config/config.json`
+Redis的key键 `config` 内容对应 `config/config.json`
 
 动态修改配置文件,无需提交代码
 
@@ -267,7 +272,7 @@ Redis的key键 `config` 内容对应 `XT-Data/config/config.json`
 ⚠️ **注意事项**
 
 - 由于Twitter API请求限制,同步指定用户全量推文流程可能存在失败情况,请勿频繁执行,请勿指定大量用户
-- 在同步指定用户全量推文流程前,请先在Actions面板停用 `XT-Bot.yml` ,避免代码提交时版本冲突而失败
+- 在同步指定用户全量推文流程前,建议先停用 `XT-Bot.yml` 定时任务，避免并发抓取造成限流
 - 或者使用 `XT-Bot/sh/INI-XT-Bot.sh` 脚本执行相关流程操作,使用前需修改 `REPO="your_username/XT-Bot"`
 
 <details>
@@ -284,6 +289,12 @@ Redis的key键 `config` 内容对应 `XT-Data/config/config.json`
 Python 3.10
 
 Bun 运行时
+
+建议设置本地数据根目录（默认 `~/.xt-bot-data`）：
+
+```bash
+export LOCAL_DATA_ROOT=~/.xt-bot-data
+```
 
 2.安装依赖
 
@@ -330,6 +341,19 @@ LARK_KEY=your_lark_webhook_key
 
 4.运行脚本
 
+推荐直接使用一键本地脚本（自动加载 `.env`、创建软链接并串联流程）：
+
+```bash
+# 自动流程：主页时间线 -> X-Bot -> T-Bot
+./sh/local-run.sh auto
+
+# 初始化流程：指定用户全量抓取
+./sh/local-run.sh init
+```
+
+> 脚本会将 `Python/dataBase`、`Python/output`、`TypeScript/tweets` 等目录软链接到 `LOCAL_DATA_ROOT`，
+> 从而确保运行数据保存在仓库外，不会进入 Git 提交。
+
 Twitter API 相关
 
 ```bash
@@ -367,6 +391,20 @@ python T-Bot.py
 # 处理指定用户推文(支持多用户)
 python INI-XT-Bot.py
 ```
+
+## 本地数据备份/恢复（可选）🧰
+
+使用 `sync_data.py` 在仓库目录与 `LOCAL_DATA_ROOT` 之间手动同步：
+
+```bash
+# 备份（项目 -> 本地数据目录）
+python Python/utils/sync_data.py push --data-root "$LOCAL_DATA_ROOT"
+
+# 恢复（本地数据目录 -> 项目）
+python Python/utils/sync_data.py pull --data-root "$LOCAL_DATA_ROOT"
+```
+
+更多本地部署说明见：`docs/LOCAL_DEPLOY.md`。
 
 ## 技术参考 📚
 
